@@ -16,25 +16,18 @@
   * specific language governing permissions and limitations
   * under the License.
   */
-package scala.org.apache.mahout.algos.transformer
+package org.apache.mahout.algos.classification
 
-//import org.apache.mahout.math._
-import org.apache.mahout.math.drm
-import org.apache.mahout.math.drm.DrmLike
-import org.apache.mahout.algos.Model
-import org.apache.mahout.math.scalabindings._
+import org.apache.commons.collections.Transformer
 
-import scala.reflect.ClassTag
+/**
+  * Created by rawkintrevo on 8/2/16.
+  */
+abstract class Classifier extends Transformer {
 
-abstract class Transformer extends Model {
-
-  /**
-    * Transform given Drm given the feature set
-    * @param input
-    * @tparam K
-    */
-  def transform[K: ClassTag](input: DrmLike[K]): DrmLike[K]
-
-
+  // will have a transformer function that creates a vector per obs
+  // of the probability of each class- classify converts this in to a 1,2,3,... label
+  // convenience wrapper
+  def classify()
 
 }

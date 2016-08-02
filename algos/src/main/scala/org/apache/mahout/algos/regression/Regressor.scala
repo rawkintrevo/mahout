@@ -18,9 +18,20 @@
   */
 package scala.org.apache.mahout.algos.regression
 
+import org.apache.mahout.algos.Model
+import org.apache.mahout.math.{Vector => MahoutVector}
+import org.apache.mahout.math.drm.DrmLike
+
 /**
   * Created by rawkintrevo on 7/29/16.
   */
-class Regressor {
+abstract class Regressor extends Model {
 
+  var Y: org.apache.mahout.math.Vector = null
+
+  def setY[Int](y: org.apache.mahout.math.Vector): Unit ={
+    Y = y
+  }
+
+  def predict[Int](drmX: DrmLike[Int]): MahoutVector
 }

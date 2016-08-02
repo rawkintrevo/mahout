@@ -53,8 +53,7 @@ import scala.reflect.{ClassTag,classTag}
   */
 class Normalizer extends Transformer{
 
-  var fitParams = collection.mutable.Map[String, MahoutVector]()
-  var isFit = false
+
 
   def fit[Int](input: DrmLike[Int]) = {
     val mNv = dcolMeanVars(input)
@@ -66,10 +65,14 @@ class Normalizer extends Transformer{
 
   def transform[K: ClassTag](input: DrmLike[K]): DrmLike[K] = {
 
+    if (!isFit) {
+      //throw an error
+    }
+
     implicit val ctx = input.context
 
     // Some mapBlock() calls need it
-    implicit val ktag =  input.keyClassTag
+    //implicit val ktag =  input.keyClassTag
 
     val meanVec = fitParams.get("meanVec").get
     val stdevVec = fitParams.get("stdev").get
@@ -104,7 +107,7 @@ class Normalizer extends Transformer{
     implicit val ctx = input.context
 
     // Some mapBlock() calls need it
-    implicit val ktag =  input.keyClassTag
+    //implicit val ktag =  input.keyClassTag
 
     val meanVec = fitParams.get("meanVec").get
     val stdevVec = fitParams.get("stdev").get

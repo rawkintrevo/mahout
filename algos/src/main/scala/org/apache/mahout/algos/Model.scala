@@ -16,25 +16,32 @@
   * specific language governing permissions and limitations
   * under the License.
   */
-package scala.org.apache.mahout.algos.transformer
+
+package org.apache.mahout.algos
 
 //import org.apache.mahout.math._
-import org.apache.mahout.math.drm
+import org.apache.mahout.math.{Vector => MahoutVector, drm}
 import org.apache.mahout.math.drm.DrmLike
-import org.apache.mahout.algos.Model
 import org.apache.mahout.math.scalabindings._
 
 import scala.reflect.ClassTag
 
-abstract class Transformer extends Model {
+abstract class Model extends Serializable {
+
+  var fitParams = collection.mutable.Map[String, MahoutVector]()
+  var isFit = false
 
   /**
-    * Transform given Drm given the feature set
-    * @param input
-    * @tparam K
+    * A method to train the model on a given Drm
+    * @param input - Drm of Festures to Train on
     */
-  def transform[K: ClassTag](input: DrmLike[K]): DrmLike[K]
+  def fit[Int](input: DrmLike[Int])
 
+
+  /**
+    * Return a summary of the fit model
+    */
+  def summary(): String
 
 
 }

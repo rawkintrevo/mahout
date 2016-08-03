@@ -13,7 +13,7 @@
 
 Ensembles and pipelines allow for complex model building.
 
-[Complex Model](./src/main/resources/complex.jpg "Complex Model")
+![Complex Model](./src/main/resources/complex.jpg "Complex Model")
 
 ### Wrappers
 

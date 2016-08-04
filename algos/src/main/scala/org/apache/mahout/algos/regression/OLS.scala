@@ -29,7 +29,7 @@ import org.apache.mahout.math.scalabindings._
 import org.apache.mahout.math.{Vector => MahoutVector}
 
 /**
-  * Created by rawkintrevo on 7/29/16.
+  * An Example of a Native Mahout Algo
   */
 class OLS extends Regressor{
 

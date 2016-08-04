@@ -49,7 +49,7 @@ import Math.sqrt
 import scala.reflect.{ClassTag,classTag}
 
 /**
-  * Created by rawkintrevo on 7/29/16.
+  * An example transformer
   */
 class Normalizer extends Transformer{
 

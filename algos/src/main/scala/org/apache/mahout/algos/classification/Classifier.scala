@@ -21,7 +21,7 @@ package org.apache.mahout.algos.classification
 import org.apache.commons.collections.Transformer
 
 /**
-  * Created by rawkintrevo on 8/2/16.
+  * Classifiers
   */
 abstract class Classifier extends Transformer {
 

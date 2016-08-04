@@ -23,7 +23,7 @@ import org.apache.mahout.math.{Vector => MahoutVector}
 import org.apache.mahout.math.drm.DrmLike
 
 /**
-  * Created by rawkintrevo on 7/29/16.
+  * Abstract of Regressors
   */
 abstract class Regressor extends Model {
 

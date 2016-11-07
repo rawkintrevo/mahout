@@ -26,7 +26,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>mahout-scala_${scala.compat.version}</artifactId>
+    <artifactId>mahout-algos_${scala.compat.version}</artifactId>
     <name>Mahout Algorithms</name>
     <description>
         A package of pre-baked algorithms for Apache Mahout (WIP)

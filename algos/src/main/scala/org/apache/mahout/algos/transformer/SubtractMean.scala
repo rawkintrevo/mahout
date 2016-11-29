@@ -47,6 +47,25 @@ class SubtractMean extends Transformer {
     output
   }
 
+  def invTransform[K: ClassTag](input: DrmLike[K]): DrmLike[K] = {
+
+    if (!isFit) {
+      //throw an error
+    }
+
+    implicit val ctx = input.context
+    val colMeansV = fitParams.get("colMeansV").get
+    val bcastV = drmBroadcast(colMeansV)
+
+    val output = input.mapBlock(input.ncol) {
+      case (keys, block) =>
+        val copy: Matrix = block.cloned
+        copy.foreach(row => row += bcastV.value)
+        (keys, copy)
+    }
+    output
+  }
+
   def summary(): String = {
     "not implemented yet"
   }

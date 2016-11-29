@@ -33,8 +33,6 @@ import org.apache.mahout.math.{Vector => MahoutVector}
   */
 class OLS extends Regressor{
 
-  var beta: MahoutVector = null
-
   def fit[Int](drmX: DrmLike[Int])= {
 
     if (drmX.nrow != Y.length){
@@ -49,13 +47,14 @@ class OLS extends Regressor{
     val XtX = drmXtX.collect
     val Xty = drmXty.collect(::, 0)
 
-    beta = solve(XtX, Xty)
+    fitParams("beta") = solve(XtX, Xty)
 
     isFit = true
   }
 
   def predict[Int](drmX: DrmLike[Int]): MahoutVector = {
-    (drmX %*% beta).collect(::, 0)
+    // throw warning if not fit
+    (drmX %*% fitParams.get("beta").get).collect(::, 0)
   }
 
   def summary() = {

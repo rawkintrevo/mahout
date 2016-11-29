@@ -53,7 +53,7 @@ class DurbinWatson extends Model {
     val e_t_1 = input(0 until input.nrow.toInt - 1, 0 until 1)
     val numerator = (e - e_t_1).assign(SQUARE).colSums
     val denominator = input.assign(SQUARE).colSums
-    dStatistic = (numerator / denominator).get(0)
+    fitParams("dStatistic") = (numerator / denominator)
     isFit = true
   }
 

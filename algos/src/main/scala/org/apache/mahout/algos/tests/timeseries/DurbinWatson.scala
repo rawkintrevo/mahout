@@ -17,10 +17,13 @@
   * under the License.
   */
 
-package org.apache.mahout.algos.timeseries.tests
+package org.apache.mahout.algos.tests.timeseries
 
 import org.apache.mahout.math.drm.DrmLike
 import org.apache.mahout.algos.Model
+import org.apache.mahout.math.function.Functions.SQUARE
+import org.apache.mahout.math.scalabindings.RLikeOps._
+import org.apache.mahout.math.drm.RLikeDrmOps._
 
 class DurbinWatson extends Model {
   //https://en.wikipedia.org/wiki/Durbin%E2%80%93Watson_statistic
@@ -36,12 +39,28 @@ class DurbinWatson extends Model {
        d > 2 : negative auto-correlation
   */
 
-  def fit(error: DrmLike[Int]) = {
-    
-    val e = error(1 until error.nrow.toInt, 0 until 1)
-    val e_t_1 = error(0 until error.nrow.toInt - 1, 0 until 1)
-    val numerator = (e - e_t_1).assign(Functions.SQUARE).colSums
-    val denominator = error.assign(Functions.SQUARE).colSums
-    numerator / denominator
+  var dStatistic : Double = -1.0
+
+  /**
+    * Compute the Durbin-Watson Test Statistic
+    * @param input - Drm of Error residuals of some other model (e.g. OLS)
+    * @tparam Int
+    */
+  def fit[Int](input: DrmLike[Int]): Unit = {
+
+    // need to throw a warning if more than 1 column.
+    val e = input(1 until input.nrow.toInt, 0 until 1)
+    val e_t_1 = input(0 until input.nrow.toInt - 1, 0 until 1)
+    val numerator = (e - e_t_1).assign(SQUARE).colSums
+    val denominator = input.assign(SQUARE).colSums
+    dStatistic = (numerator / denominator).get(0)
+    isFit = true
+  }
+
+  // Future: Would be nice to (optionally compute p value and accept/reject hypotheses)
+
+  def summary() = {
+    // throw error if isFit = False
+    "Durbin Watson Test Statistic: " + dStatistic
   }
 }

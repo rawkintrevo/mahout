@@ -35,6 +35,6 @@ abstract class Transformer extends Model {
     */
   def transform[K: ClassTag](input: DrmLike[K]): DrmLike[K]
 
-
+  def fit[Int](input: DrmLike[Int])
 
 }

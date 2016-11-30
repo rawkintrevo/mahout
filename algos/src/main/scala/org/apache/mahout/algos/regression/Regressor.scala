@@ -27,11 +27,9 @@ import org.apache.mahout.math.drm.DrmLike
   */
 abstract class Regressor extends Model {
 
-  var Y: org.apache.mahout.math.Vector = null
 
-  def setY[Int](y: org.apache.mahout.math.Vector): Unit ={
-    Y = y
-  }
 
-  def predict[Int](drmX: DrmLike[Int]): MahoutVector
+  def fit[Int](drmY: DrmLike[Int], drmX: DrmLike[Int]): Unit
+
+  def predict[Int](drmX: DrmLike[Int]): DrmLike[Int]
 }

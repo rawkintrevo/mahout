@@ -35,7 +35,7 @@ abstract class Model extends Serializable {
     * A method to train the model on a given Drm
     * @param input - Drm of Festures to Train on
     */
-  def fit[Int](input: DrmLike[Int])
+
 
 
   /**

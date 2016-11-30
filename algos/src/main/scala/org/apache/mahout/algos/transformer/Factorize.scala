@@ -1,3 +1,22 @@
+/**
+  * Licensed to the Apache Software Foundation (ASF) under one
+  * or more contributor license agreements. See the NOTICE file
+  * distributed with this work for additional information
+  * regarding copyright ownership. The ASF licenses this file
+  * to you under the Apache License, Version 2.0 (the
+  * "License"); you may not use this file except in compliance
+  * with the License. You may obtain a copy of the License at
+  *
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing,
+  * software distributed under the License is distributed on an
+  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  * KIND, either express or implied. See the License for the
+  * specific language governing permissions and limitations
+  * under the License.
+  */
+
 package org.apache.mahout.algos.transformer
 
 import org.apache.mahout.math.{Matrix, Vector}
@@ -33,14 +52,14 @@ class Factorize extends Transformer{
       //throw an error
     }
 
-
     implicit val ctx = input.context
+
     val bcastK = drmBroadcast(fitParams.get("k").get)
     val bcastFactorMap = drmBroadcast(fitParams.get("factorMap").get)
 
-    val res = input.mapBlock() {
+    val res = input.mapBlock(fitParams.get("k").get.get(0).toInt) {
       case (keys, block) => {
-        val k: Int = fitParams.get("k").get.get(0).toInt
+        val k: Int = bcastK.value.get(0).toInt
         val output = new SparseMatrix(block.nrow, k)
         // This is how we take a vector of mapping to a map
         val fm = bcastFactorMap.all.toSeq.map(e => e.get -> e.index).toMap
@@ -68,10 +87,7 @@ class Factorize extends Transformer{
   }
 
   def summary(): String = {
-    println(
-      s"""
-        |${fitParams.get("k").get(0).toInt} categories
-      """.stripMargin)
+      s"""${fitParams.get("k").get(0).toInt} categories""".stripMargin
   }
 
 }

@@ -16,18 +16,20 @@
   * specific language governing permissions and limitations
   * under the License.
   */
-package org.apache.mahout.algos.classification
+package org.apache.mahout.math.algorithms.regression
 
-import org.apache.commons.collections.Transformer
+import org.apache.mahout.math.algorithms.Model
+import org.apache.mahout.math.{Vector => MahoutVector}
+import org.apache.mahout.math.drm.DrmLike
 
 /**
-  * Classifiers
+  * Abstract of Regressors
   */
-abstract class Classifier extends Transformer {
+abstract class Regressor extends Model {
 
-  // will have a transformer function that creates a vector per obs
-  // of the probability of each class- classify converts this in to a 1,2,3,... label
-  // convenience wrapper
-  def classify()
 
+
+  def fit[Int](drmY: DrmLike[Int], drmX: DrmLike[Int]): Unit
+
+  def predict[Int](drmX: DrmLike[Int]): DrmLike[Int]
 }

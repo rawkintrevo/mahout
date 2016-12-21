@@ -17,17 +17,15 @@
   * under the License.
   */
 
-package org.apache.mahout.algos.transformer
+package org.apache.mahout.math.algorithms.transformer
 
 import org.apache.mahout.math.{Matrix, Vector}
 import org.apache.mahout.math.drm._
 
-import scala.org.apache.mahout.algos.transformer.Transformer
 import scala.reflect.ClassTag
 import org.apache.mahout.math.drm
 import org.apache.mahout.math.scalabindings._
 import org.apache.mahout.math.scalabindings.RLikeVectorOps
-
 import org.apache.mahout.math.scalabindings.RLikeOps._
 import org.apache.mahout.math.scalabindings._
 import org.apache.mahout.math.scalabindings.RLikeVectorOps

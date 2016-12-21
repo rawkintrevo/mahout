@@ -17,14 +17,12 @@
   * under the License.
   */
 
-package org.apache.mahout.algos.regression
+package org.apache.mahout.math.algorithms.regression.timeseries
 
-import org.apache.mahout.math.Vector
-
-import scala.org.apache.mahout.algos.regression.Regressor
+import org.apache.mahout.math.algorithms.regression.Regressor
+import org.apache.mahout.math.drm.DrmLike
 import org.apache.mahout.math.drm.RLikeDrmOps._
 import org.apache.mahout.math.scalabindings.RLikeOps._
-import org.apache.mahout.math.drm.DrmLike
 
 class CochraneOrcutt extends Regressor {
 

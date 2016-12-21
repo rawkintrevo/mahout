@@ -17,7 +17,7 @@
   * under the License.
   */
 
-package org.apache.mahout.algos
+package org.apache.mahout.math.algorithms
 
 //import org.apache.mahout.math._
 import org.apache.mahout.math.{Vector => MahoutVector, drm}

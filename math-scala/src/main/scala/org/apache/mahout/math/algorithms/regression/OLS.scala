@@ -16,7 +16,7 @@
   * specific language governing permissions and limitations
   * under the License.
   */
-package scala.org.apache.mahout.algos.regression
+package org.apache.mahout.math.algorithms.regression
 
 import org.apache.mahout.math.drm.DrmLike
 import org.apache.mahout.math.scalabindings.RLikeOps._
@@ -24,7 +24,7 @@ import org.apache.mahout.math.drm.RLikeDrmOps._
 import org.apache.mahout.math._
 import org.apache.mahout.math.drm
 import org.apache.mahout.math.drm.DrmLike
-import org.apache.mahout.algos.Model
+import org.apache.mahout.math.algorithms.Model
 import org.apache.mahout.math.scalabindings._
 import org.apache.mahout.math.{Vector => MahoutVector}
 

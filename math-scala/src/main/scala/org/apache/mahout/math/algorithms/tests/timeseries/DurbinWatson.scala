@@ -17,13 +17,13 @@
   * under the License.
   */
 
-package org.apache.mahout.algos.tests.timeseries
+package org.apache.mahout.math.algorithms.tests.timeseries
 
+import org.apache.mahout.math.algorithms.Model
 import org.apache.mahout.math.drm.DrmLike
-import org.apache.mahout.algos.Model
+import org.apache.mahout.math.drm.RLikeDrmOps._
 import org.apache.mahout.math.function.Functions.SQUARE
 import org.apache.mahout.math.scalabindings.RLikeOps._
-import org.apache.mahout.math.drm.RLikeDrmOps._
 
 class DurbinWatson extends Model {
   //https://en.wikipedia.org/wiki/Durbin%E2%80%93Watson_statistic

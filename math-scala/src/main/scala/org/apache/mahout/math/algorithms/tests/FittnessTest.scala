@@ -16,13 +16,11 @@
   * specific language governing permissions and limitations
   * under the License.
   */
-package org.apache.mahout.algos.ensemble
+package org.apache.mahout.math.algorithms.tests
 
 /**
-  * Various Models (Regressor/Transformer/Pipeline/other ensenbles)
-  * each with their own input data are run, the output is c-binded into
-  * a single output- useful for complex pipelines.
+  *  goodness of fit is one example. Not sure yet, but want to leave a place holder
   */
-class Ensemble { // Extends Model
+class FittnessTest {
 
 }

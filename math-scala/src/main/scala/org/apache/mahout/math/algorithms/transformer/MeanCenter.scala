@@ -1,4 +1,4 @@
-package org.apache.mahout.algos.transformer
+package org.apache.mahout.math.algorithms.transformer
 
 import org.apache.mahout.math.drm
 import org.apache.mahout.math.scalabindings._
@@ -19,10 +19,9 @@ import org.apache.mahout.math.Matrix
 
 import collection._
 import JavaConversions._
-import scala.org.apache.mahout.algos.transformer.Transformer
 import scala.reflect.ClassTag
 
-class SubtractMean extends Transformer {
+class MeanCenter extends Transformer {
 
   def fit[Int](input: DrmLike[Int]) = {
     fitParams("colMeansV") = input.colMeans

@@ -16,30 +16,25 @@
   * specific language governing permissions and limitations
   * under the License.
   */
-package org.apache.mahout.algos.transformer
+package org.apache.mahout.math.algorithms.transformer
 
+//import org.apache.mahout.math._
+import org.apache.mahout.math.drm
+import org.apache.mahout.math.drm.DrmLike
+import org.apache.mahout.math.algorithms.Model
+import org.apache.mahout.math.scalabindings._
 
-/**
-  * Created by rawkintrevo on 11/30/16.
-  */
-class FactorizeSuiteBase {
+import scala.reflect.ClassTag
+
+abstract class Transformer extends Model {
+
   /**
-    * import org.apache.mahout.algos.transformer.Factorize
-
-val A = dense((1,2,3), (1,3,2), (4,1,1))
-val drmA = drmParallelize(A)
-val col = drmA(::, 0 until 1)
-val f = new Factorize()
-
-f.fit(col)
-val expectedFit = sparse(
-          (0, 1.0) :: Nil,
-          (0, 1.0) :: Nil,
-          (1, 1.0) :: Nil
-              )
-
-val actualFit = f.transform(col).collect(::, ::)
-
-expectedFit === actualFit
+    * Transform given Drm given the feature set
+    * @param input
+    * @tparam K
     */
+  def transform[K: ClassTag](input: DrmLike[K]): DrmLike[K]
+
+  def fit[Int](input: DrmLike[Int])
+
 }

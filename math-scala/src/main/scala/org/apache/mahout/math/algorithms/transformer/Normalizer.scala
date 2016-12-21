@@ -16,37 +16,29 @@
   * specific language governing permissions and limitations
   * under the License.
   */
-package org.apache.mahout.algos.transformer
+package org.apache.mahout.math.algorithms.transformer
 
 import org.apache.mahout.math.drm
-
 import org.apache.mahout.math.scalabindings._
-
 import org.apache.mahout.math.scalabindings.RLikeVectorOps
 import org.apache.mahout.math.{Vector => MahoutVector}
-
 import org.apache.mahout.math.scalabindings.RLikeOps._
 import org.apache.mahout.math.scalabindings._
 import org.apache.mahout.math.scalabindings.RLikeVectorOps
 import org.apache.mahout.math.scalabindings.MatrixOps
-
 import org.apache.mahout.math._
 import org.apache.mahout.math.scalabindings._
 import org.apache.mahout.math.drm._
 import org.apache.mahout.math.scalabindings.RLikeOps._
 import org.apache.mahout.math.drm.RLikeDrmOps._
 import org.apache.mahout.sparkbindings._
-
 import org.apache.mahout.math.Matrix
 
 import collection._
 import JavaConversions._
-
-import scala.org.apache.mahout.algos.transformer.Transformer
-
 import Math.sqrt
 
-import scala.reflect.{ClassTag,classTag}
+import scala.reflect.{ClassTag, classTag}
 
 /**
   * An example transformer

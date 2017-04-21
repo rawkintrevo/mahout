@@ -86,21 +86,22 @@ git:
 #  slack: mahout:7vlbihiCBKuhEZK2610jkeeT
 
 before_install:
-  - wget https://archive.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.zip
-  - unzip -qq apache-maven-3.3.9-bin.zip
-  - export M2_HOME=$PWD/apache-maven-3.3.9
-  - export PATH=$M2_HOME/bin:$PATH
-  - export MAHOUT_HOME=$PWD
-  - sudo apt-get -qq update
-  - sudo apt-get install ocl-icd-libopencl1
-  - wget https://github.com/viennacl/viennacl-dev/archive/release-1.7.1.zip
-  - unzip -qq release-1.7.1.zip
-  - sudo cp -r viennacl-dev-release-1.7.1/viennacl /usr/include/viennacl
-  - sudo cp -r viennacl-dev-release-1.7.1/CL /usr/include/CL
+#  - wget https://archive.apache.org/dist/maven/maven-3/3.3.9/binaries/apache-maven-3.3.9-bin.zip
+#  - unzip -qq apache-maven-3.3.9-bin.zip
+#  - export M2_HOME=$PWD/apache-maven-3.3.9
+#  - export PATH=$M2_HOME/bin:$PATH
+#  - export MAHOUT_HOME=$PWD
+#  - sudo apt-get -qq update
+#  - sudo apt-get install ocl-icd-libopencl1
+#  - wget https://github.com/viennacl/viennacl-dev/archive/release-1.7.1.zip
+#  - unzip -qq release-1.7.1.zip
+#  - sudo cp -r viennacl-dev-release-1.7.1/viennacl /usr/include/viennacl
+#  - sudo cp -r viennacl-dev-release-1.7.1/CL /usr/include/CL
 
 script:
-  - mvn clean package $PROFILES $STANDARD_BUILD_OPTS -DskipTests
-  - mvn test -pl $TEST_MODULES $PROFILES
+#  - mvn clean package $PROFILES $STANDARD_BUILD_OPTS -DskipTests
+#  - mvn test -pl $TEST_MODULES $PROFILES
+  - echo $SPARK_BIN
   - wget $SPARK_BIN
   - tar -xzf *tgz
   - spark*/sbin/start-all.sh

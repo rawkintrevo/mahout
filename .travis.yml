@@ -100,9 +100,10 @@ before_install:
 
 script:
 #  - mvn clean package $PROFILES $STANDARD_BUILD_OPTS -DskipTests
-#  - mvn test -pl $TEST_MODULES $PROFILES
   - echo $SPARK_BIN
   - wget $SPARK_BIN
   - tar -xzf *tgz
+  - cat $HOME/.ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys
   - spark*/sbin/start-all.sh
+#  - mvn test -pl $TEST_MODULES $PROFILES -Dtest.spark.master=spark://localhost:7077
   - examples/bin/classify-wikipedia.sh 2

@@ -117,4 +117,3 @@ script:
   - spark*/sbin/start-all.sh
   # Run Tests with Master at spark://localhost:7077
   - mvn test -pl $TEST_MODULES $PROFILES -Dtest.spark.master=spark://localhost:7077
-  - examples/bin/classify-wikipedia.sh 2

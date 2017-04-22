@@ -100,6 +100,10 @@ before_install:
 
 script:
 #  - mvn clean package $PROFILES $STANDARD_BUILD_OPTS -DskipTests
+  - sudo apt-get install openssh-client
+  - sudo apt-get install openssh-server
+  - ssh-keygen -t rsa -P "" -f ~/.ssh/id_rsa
+  - cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
   - echo $SPARK_BIN
   - wget $SPARK_BIN
   - tar -xzf *tgz

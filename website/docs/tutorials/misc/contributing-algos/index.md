@@ -7,15 +7,14 @@ theme:
 
 The Mahout community is driven by user contribution.  If you have implemented an algorithm and are interested in 
 sharing it with the rest of the community, we highly encourage you to contribute it to the codebase.  However to
-keep things from getting too out of control, we has instituted a standard API for our algorithms, and we ask you 
+keep things from getting too out of control, we have instituted a standard API for our algorithms, and we ask you 
 contribute your algorithm in a way that conforms to this API as much as possible.  You can always reach out on 
-[dev@mahout.apache.org](dev@mahout.apache.org).
-
-# Example 1 Contributing a totally new Algorithm
+[dev@mahout.apache.org](dev@mahout.apache.org) if you need help.
 
 In this example, let's say you've created a totally new algorithm- a regression algorithm called `Foo`
 
-The `Foo` algorithm is a silly algorithm- it always guesses the target is 1. 
+The `Foo` algorithm is a silly algorithm- it always guesses the target is 1. Not at all useful as an algorithm, but great for
+illustrating how an algorithm would be added.
 
 ## Step 1: Create  JIRA ticket
 
@@ -108,8 +107,10 @@ In your algorithm, most of your code is going to go into the `.fit` method. Sinc
         /**
           * Normally one would have a lot more code here.
           */
-        new FooModel
+        
+        var model = new FooModel[K]
         model.summary = "This model has been fit, I would tell you more interesting things- if there was anything to tell."
+        model
       }
     }
     
@@ -125,7 +126,7 @@ In your algorithm, most of your code is going to go into the `.fit` method. Sinc
       }
     }
 
-I've also added something to the Summary thing. It wasn't a very helpful thing, but this isn't a very helpful algorithm. I included
+I've also added something to the summary string. It wasn't a very helpful thing, but this isn't a very helpful algorithm. I included
 as a reminder to you, the person writing a useful algorithm, that this is a good place to talk about the results of the fitting.
 
 At this point it would be reasonable to try building Mahout and checking that your algorithm is working the way you expect it to
@@ -160,7 +161,7 @@ And everything seems to be in order.
     
 ## Step 4. Working with Hyper Parameters
 
-It's entirely likely you'll need to have hyper-parameters to tune you algorithm. 
+It's entirely likely you'll need to have hyper-parameters to tune your algorithm. 
 
 In Mahout we handle these with a map of Symbols. You might have noticed in the `fit` and `predict` methods we included 
 `hyperparameters: (Symbol, Any)*`
@@ -404,7 +405,7 @@ There is a "branch" drop down menu- scroll down and find `mahout-xxxx`
 
 ![i have lots of issues](github-branch.png)
 
-Towards the top, off to the right, you'll see a link to "Create PR", click on this- and follow the prompts!
+Towards the top, off to the right, you'll see a link to "Pull Request", click on this- and follow the prompts!
 
 ![create PR](create-pr.png)
 

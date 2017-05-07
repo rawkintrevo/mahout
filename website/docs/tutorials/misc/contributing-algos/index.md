@@ -107,7 +107,7 @@ In your algorithm, most of your code is going to go into the `.fit` method. Sinc
         /**
           * Normally one would have a lot more code here.
           */
-        
+
         var model = new FooModel[K]
         model.summary = "This model has been fit, I would tell you more interesting things- if there was anything to tell."
         model

@@ -28,9 +28,17 @@ import scalabindings._
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.Queue
 
-class DBSCAN_Incore {
+class InCoreDBSCAN(input: DenseMatrix, epsilon: Double, minPts: Int) extends Serializable {
 
-  def expandCluster(i: Int, data: DenseMatrix, neighbours: DenseVector, clusterId: Int, Eps: Double, Minpts: Int) = {
+  var data = input
+  // maybe these can be vals
+  var eps = epsilon
+  var minpts = minPts
+
+  def expandCluster(i: Int,
+                    neighbours: DenseVector,
+                    clusterId: Int) = {
+
     data(i, 3) = clusterId.toDouble
     var neighbourQueue = new Queue[Int]()
     for(index <- 0 until neighbours.length) {
@@ -40,9 +48,9 @@ class DBSCAN_Incore {
     while(neighbourQueue.nonEmpty) {
       var curr: Int = neighbourQueue.dequeue()
       if(data(curr, 1) == 0) {
-        var currNeighbours: DenseVector = findNeighbours(curr, data, Eps)
+        var currNeighbours: DenseVector = findNeighbours(curr)
         data(curr, 1) = 1
-        if(currNeighbours.length >= Minpts) {
+        if(currNeighbours.length >= minpts) {
           data(curr, 0) = 1 //coreFlag == True
           for (index <- 0 until currNeighbours.length) {
             neighbourQueue += currNeighbours(index).toInt
@@ -55,23 +63,23 @@ class DBSCAN_Incore {
     }
   }
 
-  def DBSCAN(data: DenseMatrix, Eps: Double, Minpts: Int): Unit = {
+  def DBSCAN(): Unit = {
 
     var clusterId: Int = 0
-    for(i <- 0 until data.nrow) {
-      if(data(i, 1) != 1) {
+    for(corePoint <- 0 until data.nrow) {
+      if(data(corePoint, 1) != 1) {
         //i.e. if notProcessed...
-        val neighbours: DenseVector = findNeighbours(i, data, Eps)
-        data(i, 1) = 1.0 // ==> processedFlag = True
-        if(neighbours.length >= Minpts) {
+        val neighbours: DenseVector = findNeighbours(corePoint)
+        data(corePoint, 1) = 1.0 // ==> processedFlag = True
+        if(neighbours.length >= minpts) {
           // ==> i corresponds to a core point.
-          data(i, 0) = 1 // ==> coreFlag = True
+          data(corePoint, 0) = 1 // ==> coreFlag = True
           //          data(i, 3) = clusterId
-          expandCluster(i, data, neighbours, clusterId, Eps, Minpts)
+          expandCluster(corePoint, neighbours, clusterId)
           clusterId += 1
         }
         else {
-          data(i, 4) = 1.0 // ==> noiseFlag = True
+          data(corePoint, 4) = 1.0 // ==> noiseFlag = True
         }
       }
     }
@@ -83,7 +91,7 @@ class DBSCAN_Incore {
   data: DenseMatrix[Double] - The augmented matrix containing all the data points along with the 4 appended columns
   Returns: A DenseVector containing the ID's of all the points that are at an Eps distance from point.
    */
-  def findNeighbours(point: Int, data: DenseMatrix, Eps: Double) : DenseVector = {
+  def findNeighbours(point: Int) : DenseVector = {
     val pointId: Int = data(point, 2).toInt
     var neighbours: ArrayBuffer[Int] = new ArrayBuffer[Int]()
     val pointData: DenseVector = dvec(data(pointId, ::))
@@ -92,7 +100,7 @@ class DBSCAN_Incore {
       if(row(0).toInt != pointId) {
         val arg1 = dvec(row)
         val arg2 = dvec(pointData)
-        if(distanceMetric(arg1, arg2) <= Eps) {
+        if(distanceMetric(arg1, arg2) <= eps) {
           neighbourCount += 1
           neighbours += pointData(2).toInt
         }

@@ -19,28 +19,87 @@
 package org.apache.mahout.math.algorithms.clustering
 
 import scala.collection.JavaConversions.iterableAsScalaIterable
-import org.apache.mahout.math.scalabindings.::
-import org.apache.mahout.math.scalabindings.RLikeOps.m2mOps
-import org.apache.mahout.math.scalabindings.RLikeOps.v2vOps
-import org.apache.mahout.math.scalabindings.dvec
+import org.apache.mahout.math.scalabindings._
+import org.apache.mahout.math.scalabindings.RLikeOps._
 import org.apache.mahout.math._
-import scalabindings._
-import scala.collection.mutable.ArrayBuffer
-import scala.collection.mutable.Queue
+import org.apache.mahout.math.algorithms.common.distance.{DistanceMetric, DistanceMetricSelector}
+import org.apache.mahout.math.drm._
+import org.apache.mahout.math.drm.RLikeDrmOps._
 
-class InCoreDBSCAN(input: DenseMatrix, epsilon: Double, minPts: Int) extends Serializable {
 
-  var data = input
+import scala.collection.mutable
+
+
+class DistributedDBSCAN extends ClusteringFitter {
+
+  var epsilon: Double = _
+  var minPts: Int = _
+  var distanceMeasure: Symbol = _
+
+  def setStandardHyperparameters(hyperparameters: Map[Symbol, Any] = Map('foo -> None)): Unit = {
+    epsilon = hyperparameters.asInstanceOf[Map[Symbol, Double]].getOrElse('epsilon, 0.5)
+    minPts = hyperparameters.asInstanceOf[Map[Symbol, Int]].getOrElse('minPts, 1)
+    distanceMeasure = hyperparameters.asInstanceOf[Map[Symbol, Symbol]].getOrElse('distanceMeasure, 'Cosine)
+  }
+
+  def fit[K](input: DrmLike[K],
+             hyperparameters: (Symbol, Any)*): DBSCANModel = {
+
+    setStandardHyperparameters(hyperparameters.toMap)
+    implicit val ctx = input.context
+    implicit val ktag =  input.keyClassTag
+
+    val dmNumber = DistanceMetricSelector.namedMetricLookup(distanceMeasure)
+
+    val configBC = drmBroadcast(dvec(epsilon, minPts, dmNumber))
+
+    val clusters = input.allreduceBlock(
+      {
+
+        // Assign All Points to Clusters
+        case (keys, block: Matrix) => {
+          val epsilon_local = configBC.value.get(0)
+          val minPts_local = configBC.value.get(1)
+
+          val distanceMetric = DistanceMetricSelector.select(configBC.value.get(3))
+          val icDBSCAN = new InCoreDBSCAN(block, epsilon_local, minPts_local.toInt, distanceMetric)
+          // do stuff on icDBSCAN
+          icDBSCAN.data
+        }
+      }, {
+        // Optionally Merge Clusters that are close enough
+        case (oldM: Matrix, newM: Matrix) => {
+          // this does nothing- just returns the left matrix
+          oldM
+        }
+      })
+
+    val model = new DBSCANModel(1)
+    model.summary = s"""foo the bar"""
+    model
+  }
+
+}
+
+class DBSCANModel(args: Int) extends ClusteringModel {
+  def cluster[K](input: DrmLike[K]): DrmLike[K] ={
+    input
+  }
+}
+
+class InCoreDBSCAN(input: Matrix, epsilon: Double, minPts: Int, distanceMeasure: DistanceMetric) extends Serializable {
+
+  var data: Matrix = input
   // maybe these can be vals
-  var eps = epsilon
-  var minpts = minPts
+  var eps: Double = epsilon
+  var minpts: Int = minPts
 
   def expandCluster(i: Int,
                     neighbours: DenseVector,
-                    clusterId: Int) = {
+                    clusterId: Int): Unit = {
 
     data(i, 3) = clusterId.toDouble
-    var neighbourQueue = new Queue[Int]()
+    var neighbourQueue = new mutable.Queue[Int]()
     for(index <- 0 until neighbours.length) {
       neighbourQueue += neighbours(index).toInt
     }
@@ -93,7 +152,7 @@ class InCoreDBSCAN(input: DenseMatrix, epsilon: Double, minPts: Int) extends Ser
    */
   def findNeighbours(point: Int) : DenseVector = {
     val pointId: Int = data(point, 2).toInt
-    var neighbours: ArrayBuffer[Int] = new ArrayBuffer[Int]()
+    var neighbours: mutable.ArrayBuffer[Int] = new mutable.ArrayBuffer[Int]()
     val pointData: DenseVector = dvec(data(pointId, ::))
     var neighbourCount = 0
     for(row <- data) {
@@ -148,3 +207,5 @@ class InCoreDBSCAN(input: DenseMatrix, epsilon: Double, minPts: Int) extends Ser
   }
 
 }
+
+

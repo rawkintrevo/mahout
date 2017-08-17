@@ -28,7 +28,7 @@
 
         <artifactId>mahout-native-viennacl-omp_2.10</artifactId>
 
-        <name>Mahout Native VienniaCL-OpenMP Bindings for Scala 2.10</name>
+        <name>Mahout Native ViennaCL-OpenMP Bindings for Scala 2.10</name>
         <description>Native Structures and interfaces to be used from Mahout math-scala.
         </description>
         <properties>

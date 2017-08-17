@@ -20,11 +20,13 @@ import org.apache.mahout.math._
 import org.apache.mahout.math.scalabindings.RLikeOps._
 import org.apache.mahout.viennacl.opencl.javacpp.CompressedMatrix
 import org.apache.mahout.viennacl.opencl._
-import org.apache.mahout.viennacl.opencl.javacpp.Functions._
-import org.apache.mahout.viennacl.opencl.javacpp.LinalgFunctions._
+//import org.apache.mahout.viennacl.opencl.javacpp.Functions._
+//import org.apache.mahout.viennacl.opencl.javacpp.LinalgFunctions._
 import org.apache.mahout.viennacl.opencl.javacpp.{Context, LinalgFunctions, VCLVector, _}
 import org.bytedeco.javacpp.DoublePointer
 import org.scalatest.{FunSuite, Matchers}
+import org.apache.mahout.viennacl.opencl.javacpp.Functions._
+import org.apache.mahout.viennacl.opencl.javacpp.LinalgFunctions._
 
 import scala.util.Random
 
@@ -69,7 +71,6 @@ class ViennaCLSuiteVCL extends FunSuite with Matchers {
 
   test("dense vcl mmul with fast_copy") {
 
-    import LinalgFunctions._
 
     val vclCtx = new Context(Context.OPENCL_MEMORY)
 
@@ -132,8 +133,6 @@ class ViennaCLSuiteVCL extends FunSuite with Matchers {
     mxA %*% mxB
     ms = System.currentTimeMillis() - ms
     info(s"Mahout multiplication time: $ms ms.")
-
-    import LinalgFunctions._
 
     // openCL time, including copying:
     {
@@ -396,8 +395,6 @@ class ViennaCLSuiteVCL extends FunSuite with Matchers {
     mxSr %*% mxDn
     ms = System.currentTimeMillis() - ms
     info(s"Mahout multiplication time: $ms ms.")
-
-    import LinalgFunctions._
 
     // For now, since our dense matrix is fully dense lets just assume that our result is dense.
     // openCL time, including copying:

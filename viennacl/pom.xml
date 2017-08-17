@@ -26,7 +26,7 @@
     </parent>
 
     <artifactId>mahout-native-viennacl</artifactId>
-    <name>Mahout Native VienniaCL Bindings</name>
+    <name>Mahout Native ViennaCL Bindings</name>
 
   <packaging>pom</packaging>
 
@@ -54,33 +54,6 @@
         <artifactId>maven-source-plugin</artifactId>
       </plugin>
 
-      <plugin>
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <id>add-scala-sources</id>
-            <phase>initialize</phase>
-            <goals>
-              <goal>add-source</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>scala-compile</id>
-            <phase>process-resources</phase>
-            <goals>
-              <goal>compile</goal>
-            </goals>
-          </execution>
-          <execution>
-            <id>scala-test-compile</id>
-            <phase>process-test-resources</phase>
-            <goals>
-              <goal>testCompile</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
 
       <!--this is what scalatest recommends to do to enable scala tests -->
 
@@ -111,7 +84,7 @@
 
 
       <!--JavaCPP native build plugin-->
-      <!--  old-style way to get it to compile. -->
+        <!--old-style way to get it to compile.-->
       <!--based on https://github.com/bytedeco/javacpp/wiki/Maven-->
       <!--<plugin>-->
         <!--<groupId>org.codehaus.mojo</groupId>-->
@@ -160,18 +133,18 @@
         <!--</executions>-->
       <!--</plugin>-->
 
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-dependency-plugin</artifactId>
-        <version>2.3</version>
-        <executions>
-          <execution>
-            <goals>
-              <goal>properties</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+      <!--<plugin>-->
+        <!--<groupId>org.apache.maven.plugins</groupId>-->
+        <!--<artifactId>maven-dependency-plugin</artifactId>-->
+        <!--<version>2.3</version>-->
+        <!--<executions>-->
+          <!--<execution>-->
+            <!--<goals>-->
+              <!--<goal>properties</goal>-->
+            <!--</goals>-->
+          <!--</execution>-->
+        <!--</executions>-->
+      <!--</plugin>-->
       <!--<plugin>-->
         <!--<groupId>org.codehaus.mojo</groupId>-->
         <!--<artifactId>exec-maven-plugin</artifactId>-->
@@ -179,40 +152,40 @@
       <!--</plugin>-->
 
       <!-- copy jars to top directory, which is MAHOUT_HOME -->
-      <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.4</version>
-        <executions>
-          <execution>
-            <id>copy</id>
-            <phase>package</phase>
-            <configuration>
-              <tasks>
-                <copy file="target/mahout-native-viennacl_2.10-${project.version}.jar" tofile="../../mahout-native-viennacl_2.10-${project.version}.jar" />
-              </tasks>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <!-- delete jars on claen in top directory, which is MAHOUT_HOME -->
-      <plugin>
-        <artifactId>maven-clean-plugin</artifactId>
-        <version>3.0.0</version>
-        <configuration>
-          <filesets>
-            <fileset>
-              <directory>../../</directory>
-              <includes>
-                <include>mahout-native-viennacl_2.10*.jar</include>
-              </includes>
-              <followSymlinks>false</followSymlinks>
-            </fileset>
-          </filesets>
-        </configuration>
-      </plugin>
+      <!--<plugin>-->
+        <!--<artifactId>maven-antrun-plugin</artifactId>-->
+        <!--<version>1.4</version>-->
+        <!--<executions>-->
+          <!--<execution>-->
+            <!--<id>copy</id>-->
+            <!--<phase>package</phase>-->
+            <!--<configuration>-->
+              <!--<tasks>-->
+                <!--<copy file="target/mahout-native-viennacl_2.10-${project.version}.jar" tofile="../../mahout-native-viennacl_2.10-${project.version}.jar" />-->
+              <!--</tasks>-->
+            <!--</configuration>-->
+            <!--<goals>-->
+              <!--<goal>run</goal>-->
+            <!--</goals>-->
+          <!--</execution>-->
+        <!--</executions>-->
+      <!--</plugin>-->
+      <!--&lt;!&ndash; delete jars on claen in top directory, which is MAHOUT_HOME &ndash;&gt;-->
+      <!--<plugin>-->
+        <!--<artifactId>maven-clean-plugin</artifactId>-->
+        <!--<version>3.0.0</version>-->
+        <!--<configuration>-->
+          <!--<filesets>-->
+            <!--<fileset>-->
+              <!--<directory>../../</directory>-->
+              <!--<includes>-->
+                <!--<include>mahout-native-viennacl_2.10*.jar</include>-->
+              <!--</includes>-->
+              <!--<followSymlinks>false</followSymlinks>-->
+            <!--</fileset>-->
+          <!--</filesets>-->
+        <!--</configuration>-->
+      <!--</plugin>-->
     </plugins>
 
   </build>

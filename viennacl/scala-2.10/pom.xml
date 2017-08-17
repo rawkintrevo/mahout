@@ -29,7 +29,7 @@
 
         <artifactId>mahout-native-viennacl_2.10</artifactId>
 
-        <name>Mahout Native VienniaCL Bindings for Scala 2.10</name>
+        <name>Mahout Native ViennaCL Bindings for Scala 2.10</name>
         <description>Native Structures and interfaces to be used from Mahout math-scala.
         </description>
         <properties>
@@ -40,9 +40,78 @@
     <packaging>jar</packaging>
 
     <build>
-        <sourceDirectory>../src/main</sourceDirectory>
+        <!--<sourceDirectory>../src/main/java</sourceDirectory>-->
+        <!--<sourceDirectory>../src/main/scala</sourceDirectory>-->
         <testSourceDirectory>../src/test</testSourceDirectory>
         <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>../src/main/java</source>
+                                <!--<source>../src/main/scala</source>-->
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--<plugin>-->
+                <!--<groupId>org.codehaus.mojo</groupId>-->
+                <!--<artifactId>exec-maven-plugin</artifactId>-->
+                <!--<version>1.2.1</version>-->
+                <!--<executions>-->
+                    <!--<execution>-->
+                        <!--<id>javacpp</id>-->
+                        <!--<phase>process-classes</phase>-->
+                        <!--<goals>-->
+                            <!--<goal>exec</goal>-->
+                        <!--</goals>-->
+                        <!--<configuration>-->
+                            <!--<environmentVariables>-->
+                                <!--<LD_LIBRARY_PATH>{project.basedir}/target/classes/org/apache/mahout/javacpp/linalg/linux-x86_64/-->
+                                <!--</LD_LIBRARY_PATH>-->
+                            <!--</environmentVariables>-->
+                            <!--<executable>java</executable>-->
+                            <!--<arguments>-->
+                                <!--<argument>-jar</argument>-->
+                                <!--<argument>${org.bytedeco:javacpp:jar}</argument>-->
+                                <!--<argument>-propertyfile</argument>-->
+                                <!--<argument>linux-x86_64-viennacl.properties</argument>-->
+                                <!--<argument>-classpath</argument>-->
+                                <!--<argument>${project.build.outputDirectory}:${org.scala-lang:scala-library:jar}</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.CompressedMatrix</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.Context</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.MatrixBase</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.DenseRowMatrix</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.DenseColumnMatrix</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.MatMatProdExpression</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.ProdExpression</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.SrMatDnMatProdExpression</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.MatrixTransExpression</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.LinalgFunctions</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.Functions</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.VectorBase</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.VCLVector</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.VecMultExpression</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.javacpp.MemHandle</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.GPUMMul</argument>-->
+                                <!--<argument>org.apache.mahout.viennacl.opencl.GPUMMul$</argument>-->
+                            <!--</arguments>-->
+                        <!--</configuration>-->
+                    <!--</execution>-->
+                <!--</executions>-->
+            <!--</plugin>-->
+
             <plugin>
                 <artifactId>maven-antrun-plugin</artifactId>
                 <executions>
@@ -62,8 +131,6 @@
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
-
     </build>
 </project>

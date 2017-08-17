@@ -28,7 +28,7 @@
 
         <artifactId>mahout-native-viennacl_2.10</artifactId>
 
-        <name>Mahout Native VienniaCL Bindings for Scala 2.10</name>
+        <name>Mahout Native ViennaCL Bindings for Scala 2.10</name>
         <description>Native Structures and interfaces to be used from Mahout math-scala.
         </description>
         <properties>

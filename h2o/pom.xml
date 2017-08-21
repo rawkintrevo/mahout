@@ -40,25 +40,6 @@
   <build>
 
     <plugins>
-      <!-- copy jars to top directory, which is MAHOUT_HOME -->
-      <plugin>
-        <artifactId>maven-antrun-plugin</artifactId>
-        <version>1.4</version>
-        <executions>
-          <execution>
-            <id>copy</id>
-            <!--<phase>package</phase>-->
-            <configuration>
-              <tasks>
-                <copy file="target/mahout-h2o_${scala.compat.version}-${project.version}.jar" tofile="../mahout-h2o_${scala.compat.version}-${project.version}.jar" />
-              </tasks>
-            </configuration>
-            <goals>
-              <goal>run</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
@@ -78,6 +59,21 @@
         </executions>
       </plugin>
 
+
+      <!-- create test jar so other modules can reuse the native test utility classes. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <executions>
+          <execution>
+            <goals>
+              <goal>test-jar</goal>
+            </goals>
+            <!--<phase>package</phase>-->
+          </execution>
+        </executions>
+      </plugin>
+
       <plugin>
         <artifactId>maven-javadoc-plugin</artifactId>
       </plugin>
@@ -92,26 +88,29 @@
         <executions>
           <execution>
             <id>add-scala-sources</id>
-            <phase>initialize</phase>
+            <!--<phase>initialize</phase>-->
             <goals>
               <goal>add-source</goal>
             </goals>
           </execution>
           <execution>
             <id>scala-compile</id>
-            <phase>process-resources</phase>
+            <!--<phase>process-resources</phase>-->
             <goals>
               <goal>compile</goal>
             </goals>
           </execution>
           <execution>
             <id>scala-test-compile</id>
-            <phase>process-test-resources</phase>
+            <!--<phase>process-test-resources</phase>-->
             <goals>
               <goal>testCompile</goal>
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <skip>true</skip>  <!-- this gets you past the class not found errrors -->
+        </configuration>
       </plugin>
 
       <!--this is what scalatest recommends to do to enable scala tests -->
@@ -136,15 +135,56 @@
             </goals>
           </execution>
         </executions>
+        <configuration>
+          <argLine>-Xmx4g</argLine>
+        </configuration>
       </plugin>
-      <!-- remove jars from top directory on clean -->
+
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-dependency-plugin</artifactId>
+        <version>2.3</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>properties</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
+      <!-- copy jars to top directory, which is MAHOUT_HOME -->
+      <plugin>
+        <artifactId>maven-antrun-plugin</artifactId>
+        <version>1.4</version>
+        <executions>
+          <execution>
+            <id>copy</id>
+            <!--<phase>package</phase>-->
+            <configuration>
+              <tasks>
+                <copy todir="../../">
+                  <fileset dir="target">
+                    <include name="*.jar"/>
+                    <exclude name="*tests.jar"/>
+                  </fileset>
+                </copy>
+              </tasks>
+            </configuration>
+            <goals>
+              <goal>run</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+      <!-- delete jars on clean in top directory, which is MAHOUT_HOME -->
       <plugin>
         <artifactId>maven-clean-plugin</artifactId>
         <version>3.0.0</version>
         <configuration>
           <filesets>
             <fileset>
-              <directory>../</directory>
+              <directory>../../</directory>
               <includes>
                 <include>mahout-h2o*.jar</include>
               </includes>
@@ -155,6 +195,7 @@
       </plugin>
     </plugins>
   </build>
+
 
   <dependencies>
   <dependency>
@@ -209,6 +250,7 @@
     <dependency>
       <groupId>org.scalatest</groupId>
       <artifactId>scalatest_${scala.compat.version}</artifactId>
+      <version>3.0.3</version>
     </dependency>
 
   </dependencies>

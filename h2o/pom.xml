@@ -186,7 +186,7 @@
             <fileset>
               <directory>../../</directory>
               <includes>
-                <include>mahout-h20*.jar</include>
+                <include>mahout-h2o*.jar</include>
               </includes>
               <followSymlinks>false</followSymlinks>
             </fileset>

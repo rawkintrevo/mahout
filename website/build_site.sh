@@ -12,7 +12,7 @@ curl -sSL https://get.rvm.io | bash -s -- --path ${RUBY_PATH}
 mkdir -p ${GEM_HOME}/gems
 gem install  --install-dir ${GEM_HOME} bundler
 export PATH=${GEM_HOME}/bin:$PATH
-bundle install --path ${GEM_HOME}
+(cd oldsite && bundle install --path ${GEM_HOME})
 (cd oldsite && bundle)
 (cd oldsite && bundle exec jekyll build --destination $WORKDIR)
 (cd docs && bundle)

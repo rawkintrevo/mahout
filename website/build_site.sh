@@ -28,7 +28,6 @@ if [ ! -d "/docs/$MAHOUT_VERSION/api" ]; then
 	echo "API docs for $MAHOUT_VERSION not found, downloading them"
 	DISTFILE=apache-mahout-distribution-$MAHOUT_VERSION.tar.gz
 	DISTPATH=https://dist.apache.org/repos/dist/release/mahout/$MAHOUT_VERSION/$DISTFILE
-
 	# Copy API docs into _site
 	wget -q --directory-prefix=$WORKDIR $DISTPATH
 	echo "Unzipping..."

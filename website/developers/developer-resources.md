@@ -30,7 +30,6 @@ Javadoc and Scaladoc documentation is available online by module:
  * [Mahout Map-Reduce](/docs/{{ site.mahout-version }}/api/docs/mahout-mr/index.html)
  * [Mahout Integration](/docs/{{ site.mahout-version }}/api/docs/mahout-integration/index.html)
 
-
 <a name="DeveloperResources-Issues"></a>
 ## Issues
 

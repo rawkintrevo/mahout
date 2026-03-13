@@ -70,11 +70,17 @@ The first version of the variational engine should focus on a small, defensible 
 
 ### 1. Parameter Model
 
-Introduce a stable parameter container that maps:
+Parameters will be represented symbolically in v1. Each parameter is a named symbolic object (analogous to `cirq.Symbol` or a lightweight wrapper around `sympy.Symbol`) that can appear in circuit construction and is later resolved to a numeric value at execution time.
 
-- user-facing names
-- optimizer vector positions
-- bound numerical values
+The parameter container maps:
+
+- user-facing names to symbolic objects
+- symbolic objects to optimizer vector positions
+- symbolic objects to bound numerical values
+
+This representation is chosen deliberately: symbolic parameters allow the engine to inspect circuit structure, support analytic gradient computation in a future phase (parameter-shift rule), and make parameter provenance explicit in result objects. Numeric-only parameters would require a retrofit later and would close off the gradient path.
+
+For v1, the symbolic layer will be kept minimal — no full `sympy` expression trees are required. A lightweight `Parameter` class with a name and an optional bound value is sufficient. The optimizer will always work with numeric vectors; the symbolic names exist for human readability, result serialization, and future gradient support.
 
 This avoids pushing raw dictionaries through every layer and creates a foundation for reproducible optimization runs.
 
@@ -282,6 +288,28 @@ The proposal should be considered successful if the first implementation can sup
 - a user can optimize a simple objective over a parameterized circuit in a backend-neutral way
 - the engine returns a structured optimization result instead of ad hoc values
 - the design remains compatible with future VQE, QAOA, and QML extensions
+
+## Open Questions
+
+### 1. Objective Layer Scope For Phase 1
+
+"Expectation of simple Pauli terms" requires non-trivial Hamiltonian decomposition. It is not yet decided whether the engine will accept a pre-decomposed Hamiltonian from the user or will decompose it internally. If Phase 1 supports Pauli expectations, the boundary of responsibility needs to be stated explicitly before implementation begins.
+
+### 2. Optimizer Interface Design
+
+The proposed API sketch uses a string like `"cobyla"` for optimizer selection. It is an open question whether the optimizer interface will wrap SciPy directly or define a protocol or abstract base class for custom optimizers. A protocol-based design scales better but adds surface area. This should be resolved before the Phase 1 optimizer runner is implemented.
+
+### 3. Backend Coverage For Expectation Values
+
+Expectation value evaluation works differently across supported backends: Qiskit exposes an operator sampler primitive, Cirq supports density matrix simulation directly, and Braket uses custom result types. It is not yet decided whether the engine will normalize all three backends for expectation objectives or whether Phase 2 will explicitly scope which backends support which objective types.
+
+### 4. Webhook Event Durability
+
+The proposal states that webhook failures should not invalidate a variational run by default. It is not yet decided what happens to events that could not be delivered: dropped silently, queued for retry, or logged locally. This should be answered before the observability sink is implemented to avoid operational ambiguity in long-running workloads.
+
+### 5. Folder Structure Versus Package Structure
+
+The architecture section describes a `variational-engine/` folder for incubation. It is not yet decided whether the first implementation will live as a subpackage, an experimental namespace, or a docs-and-prototype-only area. This decision affects import paths and the public API commitment level for Phase 1.
 
 ## Recommendation
 

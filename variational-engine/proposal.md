@@ -96,13 +96,18 @@ Example responsibilities:
 
 ### 3. Observable / Objective Layer
 
-Support cost evaluation for a small initial set of objective types:
+Phase 1 should standardize on a single objective contract: a user-defined callback that receives normalized measurement data from the engine and returns a scalar cost.
 
-- measurement-probability objectives
-- expectation of simple Pauli terms
-- user-defined callback objectives
+The normalized measurement payload should abstract away backend-specific result formats while remaining simple enough to compute from shot-based execution. At minimum, the callback input should include:
 
-The key design choice is to separate "how the circuit is built" from "how quality is measured."
+- shot count
+- counts by measured bitstring
+- probabilities by measured bitstring
+- any backend metadata needed for traceability but not for backend-specific branching
+
+This boundary keeps the first implementation flexible without committing Phase 1 to Hamiltonian parsing, Pauli decomposition, or backend-specific expectation primitives. It also creates a stable foundation for later built-in objectives, since measurement-probability objectives can be implemented as library-provided callbacks and expectation workflows can be layered on once the normalization contract is proven.
+
+The key design choice is to separate "how the circuit is built" from "how quality is measured" while also normalizing execution output before user objective code sees it.
 
 ### 4. Optimization Loop
 
@@ -239,7 +244,8 @@ This separation matters because the first feature should work on plain parameter
 
 - parameter container
 - simple ansatz abstraction
-- one objective type
+- normalized measurement result contract
+- user-defined callback objective
 - one optimizer runner
 - structured result object
 - event schema plus optional webhook sink
@@ -291,17 +297,17 @@ The proposal should be considered successful if the first implementation can sup
 
 ## Open Questions
 
-### 1. Objective Layer Scope For Phase 1
+### 1. Normalized Measurement Contract For Phase 1
 
-"Expectation of simple Pauli terms" requires non-trivial Hamiltonian decomposition. It is not yet decided whether the engine will accept a pre-decomposed Hamiltonian from the user or will decompose it internally. If Phase 1 supports Pauli expectations, the boundary of responsibility needs to be stated explicitly before implementation begins.
+Phase 1 will use a user-defined callback objective that consumes normalized measurement data. The remaining design question is not whether callbacks are supported, but the exact normalized schema: which fields are mandatory, how bitstring ordering is represented, and how much backend metadata is preserved alongside counts and probabilities.
 
 ### 2. Optimizer Interface Design
 
 The proposed API sketch uses a string like `"cobyla"` for optimizer selection. It is an open question whether the optimizer interface will wrap SciPy directly or define a protocol or abstract base class for custom optimizers. A protocol-based design scales better but adds surface area. This should be resolved before the Phase 1 optimizer runner is implemented.
 
-### 3. Backend Coverage For Expectation Values
+### 3. Backend Coverage For Normalized Measurement Results
 
-Expectation value evaluation works differently across supported backends: Qiskit exposes an operator sampler primitive, Cirq supports density matrix simulation directly, and Braket uses custom result types. It is not yet decided whether the engine will normalize all three backends for expectation objectives or whether Phase 2 will explicitly scope which backends support which objective types.
+Even with callback-based objectives, backend measurement outputs still differ in naming, ordering, and metadata. It is not yet decided whether Phase 1 will normalize measurement results across all supported backends or whether the initial implementation will guarantee this contract for only a narrower backend subset and expand later.
 
 ### 4. Webhook Event Durability
 

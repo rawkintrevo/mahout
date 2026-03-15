@@ -34,6 +34,7 @@ That leaves Qumat with parameterized-circuit support but without a coherent vari
 - Make common algorithms such as VQE and QAOA straightforward to express.
 - Allow future integration with QDP-backed feature preparation for quantum ML workloads.
 - Bake observability into variational execution from the start, including configurable webhook notifications.
+- Make the implementation and documentation accessible to contributors who have little or no prior quantum-computing background.
 - Keep the first implementation narrow enough to land incrementally.
 
 ## Non-Goals
@@ -93,6 +94,7 @@ Example responsibilities:
 - declare parameter names
 - build circuit topology from config
 - support simple reusable templates such as layered hardware-efficient circuits
+- support a default QAOA template with overridable cost-layer and mixer-layer builders for domain-specific demos
 
 ### 3. Observable / Objective Layer
 
@@ -119,10 +121,14 @@ Provide a small optimizer runner that:
 - records cost history
 - returns a structured result
 
+The first version should use a formal optimizer protocol rather than a string-only adapter. The protocol should follow an `ask` / `tell` design so the engine can pause, resume, and hand control cleanly back to an outer orchestrator such as Airflow.
+
+The runner should execute in chunks rather than assuming a full optimization completes in one invocation. A chunk may stop after a maximum iteration count, a maximum wall-clock duration, or both. The engine should always finish the current evaluation before stopping and then return resumable state.
+
 The first version can support:
 
 - random search or grid search for debugging
-- SciPy-backed classical optimizers when available
+- protocol-backed optimizers, including SciPy-backed adapters when available
 - a finite-difference gradient option later, but not as a requirement for the initial draft
 
 ### 5. Result Object
@@ -134,6 +140,17 @@ Return a consistent artifact for every variational run, including:
 - iteration history
 - backend configuration used
 - execution counts and timing metadata where available
+
+The engine should also define a resumable checkpoint object for chunked execution. That checkpoint should be backend-portable and should include:
+
+- run identifier and status
+- current iteration
+- current parameter vector
+- best-so-far parameters and objective value
+- serialized optimizer state
+- compact history summary
+- append-only iteration records with backend attribution
+- timestamps for creation and last update
 
 ### 6. Built-In Observability
 
@@ -154,7 +171,18 @@ Those events should be routable to configurable webhook endpoints so external sy
 - alerting on failures or degraded convergence
 - integration with project-specific observability infrastructure
 
-Webhook delivery should be optional and should not invalidate a variational run by default if a downstream endpoint is unavailable. Configuration should allow teams to choose which events are emitted and what payload detail is included.
+The engine should support multiple sinks. Local structured logging should be enabled by default. Webhook delivery should be optional and should not invalidate a variational run by default if a downstream endpoint is unavailable. Webhook delivery should default to bounded retry behavior and local logging should remain enabled even when additional sinks are configured. A failure callback may be invoked on delivery failure, but the first implementation does not need to take recovery action beyond logging and callback invocation.
+
+### 7. Documentation And Education Surface
+
+The variational engine will need unusually verbose documentation because the expected contributor and user may have little or no prior exposure to quantum-computing terminology.
+
+The first implementation should therefore ship with two complementary documentation layers:
+
+- reference and implementation docs for contributors working on the engine itself
+- a light educational area explaining foundational terms and ideas such as parameterized circuits, ansatz, Hamiltonian, expectation value, QAOA, measurement counts, and classical-quantum optimization loops
+
+This documentation should assume minimal prior quantum background and should explain not only what the API does, but why the abstractions exist and how they map to familiar classical engineering patterns.
 
 ## Proposed Architecture
 
@@ -176,6 +204,7 @@ User algorithm config
      -> Ansatz builder
      -> Objective evaluator
      -> Optimizer runner
+     -> Checkpoint / resume manager
      -> Observability hooks / webhook dispatcher
      -> QuMat
         -> backend adapter
@@ -206,11 +235,15 @@ ansatz = HardwareEfficientAnsatz(
 runner = VariationalRunner(
     qumat=qumat,
     ansatz=ansatz,
-    objective="probability_zero",
-    optimizer="cobyla",
+    objective=my_objective_callback,
+    optimizer=my_optimizer,
 )
 
-result = runner.minimize(initial_parameters="zeros")
+chunk = runner.run_chunk(
+    initial_parameters="zeros",
+    max_iterations=25,
+    max_wall_time_seconds=30,
+)
 ```
 
 Key properties of this direction:
@@ -218,6 +251,7 @@ Key properties of this direction:
 - `QuMat` remains the execution substrate.
 - The variational layer owns algorithm flow and reporting.
 - The API can later grow toward VQE, QAOA, and QML without breaking the core model.
+- Chunked execution and resumable state allow the variational engine to act as an inner loop under a larger orchestration system.
 
 ## Integration With QDP
 
@@ -239,24 +273,28 @@ This separation matters because the first feature should work on plain parameter
 - sketch public interfaces
 - build one or two small examples
 - decide whether the feature lives as a subpackage, experimental namespace, or docs-only prototype first
+- define the educational documentation outline for non-quantum readers
 
 ### Phase 1: Minimal Engine
 
 - parameter container
 - simple ansatz abstraction
+- default QAOA ansatz template with overridable cost and mixer builders
 - normalized measurement result contract
 - user-defined callback objective
-- one optimizer runner
-- structured result object
+- formal optimizer protocol using `ask` / `tell`
+- chunked optimizer runner with pause / resume support
+- structured result object and resumable checkpoint object
 - event schema plus optional webhook sink
-- tests against at least one backend
+- tests for all supported backends against the normalized measurement contract
+- verbose reference documentation plus a light educational documentation area
 
 ### Phase 2: Practical Algorithms
 
 - VQE-style expectation workflow
-- QAOA helper templates
 - convergence history and diagnostics
 - cross-backend regression coverage
+- richer problem-specific QAOA helpers such as portfolio optimization mappings
 
 ### Phase 3: QML / QDP Integration
 
@@ -269,6 +307,8 @@ This separation matters because the first feature should work on plain parameter
 ### 1. Backend Capability Drift
 
 Different backends expose different strengths for parameter binding, expectation evaluation, and measurement semantics. The engine must normalize behavior carefully or explicitly narrow supported features per backend.
+
+For the current design, this risk applies directly to normalized measurement payloads and resumability across backends. The checkpoint format must not depend on opaque backend execution state.
 
 ### 2. API Surface Growth
 
@@ -286,36 +326,42 @@ Variational workflows combine stochastic execution, optimizer behavior, and back
 
 Webhook-based observability can become noisy or operationally brittle if every iteration emits oversized payloads or if downstream systems are slow. The engine should define bounded payloads, configurable event selection, and clear failure-handling rules early.
 
+### 6. Documentation Debt
+
+If the engine ships with only terse API notes, contributors without a quantum background will struggle to modify or extend it safely. The project should treat educational documentation as a deliverable, not as cleanup work after implementation.
+
 ## Success Criteria
 
 The proposal should be considered successful if the first implementation can support all of the following:
 
 - a user can define a reusable ansatz without manually managing raw parameter dictionaries
-- a user can optimize a simple objective over a parameterized circuit in a backend-neutral way
-- the engine returns a structured optimization result instead of ad hoc values
+- a user can optimize a callback-defined objective over a parameterized circuit in a backend-neutral way
+- the engine returns a structured optimization result and a resumable checkpoint instead of ad hoc values
+- a variational run can pause on one backend and resume on another without changing the callback contract or parameter semantics
 - the design remains compatible with future VQE, QAOA, and QML extensions
+- the documentation is detailed enough that an engineer without prior quantum-computing experience can follow the architecture and implement a basic extension
 
 ## Open Questions
 
 ### 1. Normalized Measurement Contract For Phase 1
 
-Phase 1 will use a user-defined callback objective that consumes normalized measurement data. The remaining design question is not whether callbacks are supported, but the exact normalized schema: which fields are mandatory, how bitstring ordering is represented, and how much backend metadata is preserved alongside counts and probabilities.
+Phase 1 will use a user-defined callback objective that consumes normalized measurement data. The remaining design question is the exact normalized schema: which fields are mandatory, how bitstring ordering is represented, and how much backend metadata is preserved alongside counts and probabilities.
 
 ### 2. Optimizer Interface Design
 
-The proposed API sketch uses a string like `"cobyla"` for optimizer selection. It is an open question whether the optimizer interface will wrap SciPy directly or define a protocol or abstract base class for custom optimizers. A protocol-based design scales better but adds surface area. This should be resolved before the Phase 1 optimizer runner is implemented.
+Phase 1 will use a formal optimizer protocol with `ask` / `tell` semantics. The remaining design question is the exact protocol shape: whether `ask()` returns one point or many, what context is supplied to `tell()`, and how optimizer state is serialized for pause / resume.
 
 ### 3. Backend Coverage For Normalized Measurement Results
 
-Even with callback-based objectives, backend measurement outputs still differ in naming, ordering, and metadata. It is not yet decided whether Phase 1 will normalize measurement results across all supported backends or whether the initial implementation will guarantee this contract for only a narrower backend subset and expand later.
+Phase 1 will normalize measurement results across all supported backends. The remaining design question is the exact conformance contract and what metadata is required versus optional for each backend adapter.
 
-### 4. Webhook Event Durability
+### 4. Multi-Sink Event Delivery
 
-The proposal states that webhook failures should not invalidate a variational run by default. It is not yet decided what happens to events that could not be delivered: dropped silently, queued for retry, or logged locally. This should be answered before the observability sink is implemented to avoid operational ambiguity in long-running workloads.
+The engine will support multiple sinks. Local logging will be enabled by default, webhook delivery will be optional, and webhook delivery will retry by default with bounded behavior. The remaining design question is the exact retry policy and failure-callback signature.
 
 ### 5. Folder Structure Versus Package Structure
 
-The architecture section describes a `variational-engine/` folder for incubation. It is not yet decided whether the first implementation will live as a subpackage, an experimental namespace, or a docs-and-prototype-only area. This decision affects import paths and the public API commitment level for Phase 1.
+The first implementation should land the same way QDP currently does: developed in its own area but surfaced through `qumat` with an intentionally narrow integration boundary. The remaining design question is the exact import path and optional-dependency story for the first public-facing draft.
 
 ## Recommendation
 

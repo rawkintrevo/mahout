@@ -96,6 +96,49 @@ Example responsibilities:
 - support simple reusable templates such as layered hardware-efficient circuits
 - support a default QAOA template with overridable cost-layer and mixer-layer builders for domain-specific demos
 
+Recommended Phase 1 QAOA extension shape:
+
+```python
+class QAOAProblem(Protocol):
+    def cost_layer(self, qumat: QuMat, gamma_parameter: Parameter) -> None: ...
+    def describe(self) -> dict[str, Any]: ...
+
+
+class MixerStrategy(Protocol):
+    def mixer_layer(
+        self,
+        qumat: QuMat,
+        qubits: Sequence[int],
+        beta_parameter: Parameter,
+    ) -> None: ...
+    def describe(self) -> dict[str, Any]: ...
+
+
+@dataclass
+class QAOAParameterLayout:
+    depth: int
+    gamma_names: list[str]
+    beta_names: list[str]
+
+
+@dataclass
+class QAOAAnsatz:
+    qubits: tuple[int, ...]
+    depth: int
+    problem: QAOAProblem
+    mixer: MixerStrategy = XMixer()
+    parameter_layout: QAOAParameterLayout | None = None
+```
+
+Recommended Phase 1 QAOA rules:
+
+- `QAOAAnsatz` composes a problem strategy, a mixer strategy, and a deterministic parameter layout
+- the default mixer is the standard `X` mixer
+- the default parameter layout produces ordered `gamma_0..gamma_{p-1}` and `beta_0..beta_{p-1}` names
+- `QAOAProblem.cost_layer()` mutates the provided `QuMat` circuit rather than returning backend-native operations
+- problem and mixer `describe()` methods return JSON-serializable metadata for checkpoints, logging, and documentation
+- the core engine provides a generic QAOA path while allowing a demo or downstream package to supply richer problem-specific implementations such as portfolio optimization
+
 ### 3. Observable / Objective Layer
 
 Phase 1 should standardize on a single objective contract: a user-defined callback that receives normalized measurement data from the engine and returns a scalar cost.
@@ -110,6 +153,32 @@ The normalized measurement payload should abstract away backend-specific result 
 This boundary keeps the first implementation flexible without committing Phase 1 to Hamiltonian parsing, Pauli decomposition, or backend-specific expectation primitives. It also creates a stable foundation for later built-in objectives, since measurement-probability objectives can be implemented as library-provided callbacks and expectation workflows can be layered on once the normalization contract is proven.
 
 The key design choice is to separate "how the circuit is built" from "how quality is measured" while also normalizing execution output before user objective code sees it.
+
+Recommended Phase 1 shape:
+
+```python
+@dataclass
+class NormalizedMeasurementResult:
+    shots: int
+    counts: dict[str, int]
+    probabilities: dict[str, float]
+    bitstring_order: str                  # "msb_left"
+    measured_qubits: tuple[int, ...]
+    parameter_values: dict[str, float]
+    backend_name: str
+    backend_run_id: str | None
+    started_at_utc: str | None
+    completed_at_utc: str | None
+    metadata: dict[str, Any]
+```
+
+Recommended Phase 1 rules:
+
+- bitstrings are fixed-width binary strings such as `"0011"`
+- `counts` and `probabilities` share the same key set
+- `probabilities` are always present, derived from counts when needed
+- `metadata` is available for traceability but is not part of the portable objective contract
+- full normalized measurement results may be kept in memory during execution, but they should not be persisted in full for every iteration by default
 
 ### 4. Optimization Loop
 
@@ -130,6 +199,26 @@ The first version can support:
 - random search or grid search for debugging
 - protocol-backed optimizers, including SciPy-backed adapters when available
 - a finite-difference gradient option later, but not as a requirement for the initial draft
+
+Recommended Phase 1 optimizer protocol:
+
+```python
+class Optimizer(Protocol):
+    def initialize(self, initial_parameters: Sequence[float]) -> OptimizerState: ...
+    def ask(self, state: OptimizerState) -> Sequence[float]: ...
+    def tell(self, state: OptimizerState, evaluation: EvaluationRecord) -> OptimizerState: ...
+    def should_stop(self, state: OptimizerState) -> bool: ...
+    def get_best(self, state: OptimizerState) -> BestRecord | None: ...
+    def serialize_state(self, state: OptimizerState) -> dict[str, Any]: ...
+    def restore_state(self, payload: Mapping[str, Any]) -> OptimizerState: ...
+```
+
+Recommended Phase 1 constraints:
+
+- `ask()` returns a single parameter vector in Phase 1
+- `tell()` receives the scalar objective value plus execution summary, not the full raw measurement payload
+- optimizer state must be JSON-serializable through `serialize_state()`
+- stopping logic belongs to the optimizer, while chunk limits belong to the runner
 
 ### 5. Result Object
 
@@ -152,6 +241,46 @@ The engine should also define a resumable checkpoint object for chunked executio
 - append-only iteration records with backend attribution
 - timestamps for creation and last update
 
+Recommended Phase 1 result and checkpoint shapes:
+
+```python
+@dataclass
+class EvaluationRecord:
+    iteration: int
+    parameters: list[float]
+    objective_value: float
+    backend_name: str
+    started_at_utc: str | None
+    completed_at_utc: str | None
+    duration_ms: float | None
+    is_new_best: bool
+    measurement_summary: dict[str, Any]
+
+
+@dataclass
+class VariationalCheckpoint:
+    run_id: str
+    status: str
+    iteration: int
+    current_parameters: list[float]
+    best_parameters: list[float] | None
+    best_objective: float | None
+    optimizer_state: dict[str, Any]
+    backend_history: list[str]
+    history_summary: dict[str, Any]
+    iteration_records: list[EvaluationRecord]
+    last_measurement: NormalizedMeasurementResult | None
+    created_at_utc: str
+    updated_at_utc: str
+```
+
+Recommended Phase 1 checkpoint rules:
+
+- the checkpoint is the resumable artifact returned at chunk boundaries
+- checkpoint state must not depend on opaque backend-native execution state
+- `iteration_records` should store summaries, not full raw measurement payloads for every iteration
+- `last_measurement` may be retained for debugging and inspection without making full-history persistence mandatory
+
 ### 6. Built-In Observability
 
 Observability should be part of the engine contract, not an optional afterthought. Variational workloads are iterative and frequently long-running, so operators need visibility into progress, regressions, failures, and final outcomes while runs are still active.
@@ -172,6 +301,33 @@ Those events should be routable to configurable webhook endpoints so external sy
 - integration with project-specific observability infrastructure
 
 The engine should support multiple sinks. Local structured logging should be enabled by default. Webhook delivery should be optional and should not invalidate a variational run by default if a downstream endpoint is unavailable. Webhook delivery should default to bounded retry behavior and local logging should remain enabled even when additional sinks are configured. A failure callback may be invoked on delivery failure, but the first implementation does not need to take recovery action beyond logging and callback invocation.
+
+Recommended Phase 1 event and sink contracts:
+
+```python
+@dataclass
+class VariationalEvent:
+    event_type: str
+    run_id: str
+    timestamp_utc: str
+    iteration: int | None
+    backend_name: str | None
+    payload: dict[str, Any]
+
+
+class EventSink(Protocol):
+    def emit(self, event: VariationalEvent) -> None: ...
+    def flush(self) -> None: ...
+    def close(self) -> None: ...
+```
+
+Recommended Phase 1 delivery policy:
+
+- local structured logging sink is enabled by default
+- webhook sink is optional
+- webhook sink uses bounded retry with a small default attempt limit
+- failure callback receives the event and exception, but Phase 1 does not perform recovery beyond logging and callback invocation
+- parameter vectors should not be emitted on every event by default; they should appear on high-value events such as `new_best_found` and chunk completion
 
 ### 7. Documentation And Education Surface
 
@@ -241,6 +397,12 @@ runner = VariationalRunner(
 
 chunk = runner.run_chunk(
     initial_parameters="zeros",
+    max_iterations=25,
+    max_wall_time_seconds=30,
+)
+
+next_chunk = runner.run_chunk(
+    checkpoint=chunk.checkpoint,
     max_iterations=25,
     max_wall_time_seconds=30,
 )
@@ -345,19 +507,23 @@ The proposal should be considered successful if the first implementation can sup
 
 ### 1. Normalized Measurement Contract For Phase 1
 
-Phase 1 will use a user-defined callback objective that consumes normalized measurement data. The remaining design question is the exact normalized schema: which fields are mandatory, how bitstring ordering is represented, and how much backend metadata is preserved alongside counts and probabilities.
+Phase 1 will use a `NormalizedMeasurementResult` dataclass with fixed-width bitstring keys, explicit measured-qubit ordering, always-available probabilities, and a metadata escape hatch for backend-specific trace data.
 
 ### 2. Optimizer Interface Design
 
-Phase 1 will use a formal optimizer protocol with `ask` / `tell` semantics. The remaining design question is the exact protocol shape: whether `ask()` returns one point or many, what context is supplied to `tell()`, and how optimizer state is serialized for pause / resume.
+Phase 1 will use a formal optimizer protocol with single-point `ask` / `tell` semantics and JSON-serializable state for pause / resume.
 
 ### 3. Backend Coverage For Normalized Measurement Results
 
-Phase 1 will normalize measurement results across all supported backends. The remaining design question is the exact conformance contract and what metadata is required versus optional for each backend adapter.
+Phase 1 will normalize measurement results across all supported backends. The remaining design question is the exact adapter conformance checklist and which metadata fields are mandatory versus optional across backend implementations.
 
 ### 4. Multi-Sink Event Delivery
 
-The engine will support multiple sinks. Local logging will be enabled by default, webhook delivery will be optional, and webhook delivery will retry by default with bounded behavior. The remaining design question is the exact retry policy and failure-callback signature.
+The engine will support multiple sinks. Local logging will be enabled by default, webhook delivery will be optional, and webhook delivery will retry by default with bounded behavior. The remaining design question is the exact retry schedule and whether sink lifecycle methods should be mandatory or optional in the final public API.
+
+### 5. QAOA Extension Surface
+
+Phase 1 will include a default QAOA ansatz template built around explicit `QAOAProblem` and `MixerStrategy` protocols plus a deterministic parameter-layout object. The remaining design question is whether the final public API should expose those extension points directly or also provide a lighter callback-based convenience layer on top.
 
 ### 5. Folder Structure Versus Package Structure
 
